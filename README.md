@@ -1,7 +1,7 @@
 # Smart Campus - Sensor & Room Management API
 Module: 5COSC022W Client-Server Architectures (2025/26)  
 Student: Shenuka Dias - w2151948  
-GitHub: Repository Link
+GitHub: [Repository Link](https://github.com/ShenukaDias/w2151948-csa-cw)
 
 A RESTful API for the university Smart Campus initiative, built with JAX-RS (Jersey) and run on an embedded Grizzly HTTP server. The service manages rooms, sensors deployed within them, and a historical log of sensor readings. All data is stored in memory and no database technology is used.
 
@@ -13,7 +13,7 @@ A RESTful API for the university Smart Campus initiative, built with JAX-RS (Jer
 
 ### 2. Download Project
 ```bash
-git clone <your-repository-url>
+git clone <https://github.com/ShenukaDias/w2151948-csa-cw>
 cd smartCampusApi
 ```
 
