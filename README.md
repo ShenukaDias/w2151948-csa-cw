@@ -145,9 +145,9 @@ curl -i "http://localhost:8080/api/v1/sensors/CO2-001/readings"
 
 By default, JAX-RS resource classes are request-scoped. This means the runtime normally creates a new instance of a resource class for each incoming HTTP request. In this project, classes such as `RoomResource`, `SensorResource`, and `DiscoveryResource` do not store long-term state inside instance fields. Instead, shared application data is stored centrally in the `DataStore` class using static in-memory collections.
 
-This design matters because request-scoped resources are recreated for each request, so any data placed directly inside a resource object would be lost after the response is sent. To persist API state across requests, this implementation stores rooms, sensors, and readings in `HashMap` and `ArrayList` structures inside `DataStore`.
+This design matters because request-scoped resources are recreated for each request, so any data placed directly inside a resource object would be lost after the response is sent. To persist data across requests, this implementation stores rooms, sensors, and readings in shared in-memory collections inside `DataStore`.
 
-Because these collections are shared across requests, concurrency must be considered. In the current implementation, the API uses plain `HashMap` and `ArrayList`, which are suitable for the coursework requirement of using in-memory Java collections, but they are not inherently thread-safe. In a multi-threaded server, concurrent access could lead to race conditions if many clients update the API at the same time. For this coursework, the design is acceptable as a lightweight in-memory solution, but in a production-grade service the shared collections should be synchronized or replaced with thread-safe alternatives.
+Because these collections are shared across concurrent requests, synchronization must be considered. In this implementation, the shared maps are wrapped using synchronized collection wrappers, and reading lists are created as synchronized lists. This keeps the in-memory design aligned with the coursework requirement while making the shared state safer under concurrent access.
 
 **Q: Why is the provision of Hypermedia (links and navigation within responses) considered a hallmark of advanced RESTful design (HATEOAS)? How does this approach benefit client developers compared to static documentation?**
 
@@ -203,7 +203,7 @@ For that reason, `422 Unprocessable Entity` is more semantically accurate than `
 
 Exposing internal Java stack traces to clients is dangerous because it leaks implementation details that should remain private. A stack trace can reveal package names, class names, method names, internal file structure, and details about the libraries or frameworks in use. That information can help an attacker map the internal design of the application and look for known weaknesses.
 
-To reduce this risk, the project includes a catch-all `ExceptionMapper<Throwable>` that returns a generic `500 Internal Server Error` JSON response instead of exposing raw exceptions to clients. This prevents the API from leaking internal debugging information through default server error pages or raw stack traces.
+To reduce this risk, the project includes a catch-all `ExceptionMapper<Throwable>` that logs the full exception server-side and returns a generic `500 Internal Server Error` JSON response instead of exposing raw exceptions to clients. This prevents the API from leaking internal debugging information through default server error pages or raw stack traces.
 
 **Q: Why is it advantageous to use JAX-RS filters for cross-cutting concerns like logging, rather than manually inserting Logger.info() statements inside every single resource method?**
 
