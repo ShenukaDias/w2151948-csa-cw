@@ -1,14 +1,15 @@
 package com.mycompany.smartcampusapi.resource;
 
+import com.mycompany.smartcampusapi.exception.DuplicateResourceException;
 import com.mycompany.smartcampusapi.exception.RoomNotEmptyException;
 import com.mycompany.smartcampusapi.model.Room;
 import com.mycompany.smartcampusapi.store.DataStore;
+import com.mycompany.smartcampusapi.util.ErrorResponses;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Map;
 
 @Path("/rooms")
 @Produces(MediaType.APPLICATION_JSON)
@@ -23,9 +24,19 @@ public class RoomResource {
     @POST
     public Response createRoom(Room room, @Context UriInfo uriInfo) {
         if (room == null || room.getId() == null || room.getId().isBlank()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of("error", "Room ID is required"))
-                    .build();
+            return ErrorResponses.build(Response.Status.BAD_REQUEST, "Room ID is required.");
+        }
+        if (room.getName() == null || room.getName().isBlank()) {
+            return ErrorResponses.build(Response.Status.BAD_REQUEST, "Room name is required.");
+        }
+        if (room.getCapacity() <= 0) {
+            return ErrorResponses.build(Response.Status.BAD_REQUEST, "Room capacity must be greater than zero.");
+        }
+        if (DataStore.rooms.containsKey(room.getId())) {
+            throw new DuplicateResourceException("A room with the same ID already exists.");
+        }
+        if (room.getSensorIds() == null) {
+            room.setSensorIds(new ArrayList<>());
         }
 
         DataStore.rooms.put(room.getId(), room);
@@ -43,9 +54,7 @@ public class RoomResource {
         Room room = DataStore.rooms.get(roomId);
 
         if (room == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of("error", "Room not found"))
-                    .build();
+            return ErrorResponses.build(Response.Status.NOT_FOUND, "Room not found.");
         }
 
         return Response.ok(room).build();
@@ -57,9 +66,7 @@ public class RoomResource {
         Room room = DataStore.rooms.get(roomId);
 
         if (room == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of("error", "Room not found"))
-                    .build();
+            return ErrorResponses.build(Response.Status.NOT_FOUND, "Room not found.");
         }
 
         if (room.getSensorIds() != null && !room.getSensorIds().isEmpty()) {

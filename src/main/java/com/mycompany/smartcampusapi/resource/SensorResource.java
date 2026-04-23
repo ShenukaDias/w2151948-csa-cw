@@ -1,9 +1,11 @@
 package com.mycompany.smartcampusapi.resource;
 
+import com.mycompany.smartcampusapi.exception.DuplicateResourceException;
 import com.mycompany.smartcampusapi.exception.LinkedResourceNotFoundException;
 import com.mycompany.smartcampusapi.model.Room;
 import com.mycompany.smartcampusapi.model.Sensor;
 import com.mycompany.smartcampusapi.store.DataStore;
+import com.mycompany.smartcampusapi.util.ErrorResponses;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
@@ -36,7 +38,19 @@ public class SensorResource {
     public Response createSensor(Sensor sensor, @Context UriInfo uriInfo) {
 
         if (sensor == null || sensor.getId() == null || sensor.getId().isBlank()) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            return ErrorResponses.build(Response.Status.BAD_REQUEST, "Sensor ID is required.");
+        }
+        if (sensor.getType() == null || sensor.getType().isBlank()) {
+            return ErrorResponses.build(Response.Status.BAD_REQUEST, "Sensor type is required.");
+        }
+        if (sensor.getStatus() == null || sensor.getStatus().isBlank()) {
+            return ErrorResponses.build(Response.Status.BAD_REQUEST, "Sensor status is required.");
+        }
+        if (sensor.getRoomId() == null || sensor.getRoomId().isBlank()) {
+            return ErrorResponses.build(Response.Status.BAD_REQUEST, "Room ID is required for sensor registration.");
+        }
+        if (DataStore.sensors.containsKey(sensor.getId())) {
+            throw new DuplicateResourceException("A sensor with the same ID already exists.");
         }
 
         Room room = DataStore.rooms.get(sensor.getRoomId());
@@ -63,7 +77,7 @@ public class SensorResource {
         Sensor sensor = DataStore.sensors.get(sensorId);
 
         if (sensor == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return ErrorResponses.build(Response.Status.NOT_FOUND, "Sensor not found.");
         }
 
         return Response.ok(sensor).build();
