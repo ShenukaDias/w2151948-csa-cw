@@ -8,10 +8,10 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 public class SmartCampusApi {
 
-    public static final String BASE_URI = "http://localhost:8080/";
+   public static final String BASE_URI = "http://localhost:8080/api/v1/";
 
     public static HttpServer startServer() {
-        final ResourceConfig rc = ResourceConfig.forApplicationClass(SmartCampusApplication.class)
+        final ResourceConfig rc = new ResourceConfig()
                 .packages("com.mycompany.smartcampusapi");
         return GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);
     }
